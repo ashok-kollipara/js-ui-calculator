@@ -1,0 +1,5 @@
+.outer-body {
+  border: solid;
+  border-style: double;
+  padding: 40px;
+}
