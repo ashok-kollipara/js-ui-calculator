@@ -13,7 +13,7 @@ display.style.flex = "1 1 0";
 display.style.textAlign = "right";
 display.style.backgroundColor = "#ebe9e6";
 display.style.padding = "20px";
-display.textContent = "8728 + 902 - 453 / 131";
+display.textContent = "0";
 
 
 // Keypad area container
@@ -100,7 +100,6 @@ addButton = document.createElement("button");
 addButton.className = "add operationKeys";
 addButton.textContent = "+";
 addButton.setAttribute("value", "+");
-addButton.style.flex = "1";
 // subtract
 subtractButton = document.createElement("button");
 subtractButton.className = "subtract operationKeys";
@@ -116,12 +115,17 @@ divideButton = document.createElement("button");
 divideButton.className = "divide operationKeys";
 divideButton.textContent = "/";
 divideButton.setAttribute("value", "/");
+// backspace
+delButton = document.createElement("button");
+delButton.className = "delete operationKeys";
+delButton.textContent = "DEL";
+delButton.setAttribute("value", "delete");
 
 
 // include
 specialButtonsContainer.append(clearButton, plusMinusButton, percentageButton);
 powerfulContainer.append(zeroButton, dotButton, equalButton);
-operationKeysContainer.append(subtractButton, multiplyButton, divideButton, addButton);
+operationKeysContainer.append(delButton, subtractButton, multiplyButton, divideButton, addButton);
 buttonsContainer.appendChild(specialButtonsContainer);
 buttonsContainer.appendChild(numbersContainer);
 buttonsContainer.appendChild(powerfulContainer);
@@ -162,12 +166,54 @@ Array.from(buttons).map((currentButton) => {
 })
 console.table(classList);
 
+function performComputation () {
+    let displayString = display.textContent
+    let num1
+    let num2
+    let operator
+    let operationResult
+    [num1, operator, num2] = displayString.split(" ");
+    if (isNaN(num2)) {
+        console.warn("Second number not present")
+        return
+    }
+    console.log("Performing", num1, operator, num2)
+    num1 = Number(num1)
+    num2 = Number(num2)
+    if (num2 === 0) {
+        console.warn("Cannot divide by zero")
+        display.textContent = "BooooM...!"
+        return
+    }
+
+    switch (operator) {
+        case "+":
+            operationResult = num1 + num2
+            display.textContent = parseFloat(operationResult % 1 ? operationResult.toFixed(6) : operationResult)
+            break;
+        case "-":
+            operationResult = num1 - num2
+            display.textContent = parseFloat(operationResult % 1 ? operationResult.toFixed(6) : operationResult)
+            break;
+        case "/":
+            operationResult = num1 / num2
+            display.textContent = parseFloat(operationResult % 1 ? operationResult.toFixed(6) : operationResult)
+            break;
+        case "x":
+            operationResult = num1 * num2
+            display.textContent = parseFloat(operationResult % 1 ? operationResult.toFixed(6) : operationResult)
+            break;
+
+    }
+    
+}
+
 
 // manage inputs
 // use function style to place code anywhere
 function calculation(input) {
-    key = input.target.getAttribute("value")
-    display_screen = document.querySelector("display")
+    let key = input.target.getAttribute("value")
+    // display_screen = document.querySelector("display")
     switch (key) {
         case "clear":
             display.textContent = "0"
@@ -190,7 +236,15 @@ function calculation(input) {
             break;
 
         case ".":
-            if (!display.textContent.includes(".")) {
+            let num1
+            let num2
+            let operator
+            [num1, operator, num2] = display.textContent.split(" ");
+            console.log(num1, operator, num2)
+            if (num2 && !num2.includes(".")) {
+                display.textContent += input.target.value;
+            }
+            if (num1 && !num1.includes(".")) {
                 display.textContent += input.target.value;
             }
             break;
@@ -199,17 +253,49 @@ function calculation(input) {
         case "-":
         case "x":
         case "/":
-            let pattern = /[x\-\+\\]/
+            let pattern = /[x\-\+\/]/
             let result = display.textContent.match(pattern) 
-            if (result) {
+            // only '-' is allowed at index 0
+            if (result && isNaN(display.textContent)) {
                 console.log("display already has operator", result);
+                console.log("performing calculation and updating display");
+                performComputation();
+                display.textContent += ` ${input.target.value} `;
             } else {
-                display.textContent += input.target.value;
+                display.textContent += ` ${input.target.value} `;
             }
 
             break;
 
+        case "invertSign":
+            // could also make into another function
+            console.log("Inverting sign of display value")
+            let displayValue = Number(display.textContent)
+            displayValue *= -1;
+            display.textContent = displayValue.toString();
+            break;
+
+        case "=":
+            console.log("performing calculation and updating display");
+            performComputation();
+            break;
+
     
+        case "%":
+            console.log("performing percentage calculation and updating display");
+            let num = Number(display.textContent)
+            num = num / 100
+            display.textContent = num
+            break;
+
+        case "delete":
+            console.log("deleting a character from input")
+            display.textContent = display.textContent.slice(0, display.textContent.length-1)
+            if (display.textContent === "") {
+                display.textContent = "0"
+            }
+            break;
+
         default:
             console.warn(`you pressed ${input.target.value} which is not mapped to any functionality`)
             break;
